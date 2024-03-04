@@ -1,0 +1,6 @@
+@PaintOnlineAPI_HostAddress = http://localhost:5206
+
+GET {{PaintOnlineAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
