@@ -1,3 +1,5 @@
+using PaintOnlineAPI.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,7 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 
 builder.Services.AddCors(options => {
-    options.AddPolicy("CORSPolicy", builder => builder.AllowAnyMethod().AllowAnyHeader().AllowCredentials().SetIsOriginAllowed((hosts) => true));
+    options.AddPolicy("CORSPolicy", builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials().SetIsOriginAllowed((hosts) => true));
 });
 
 var app = builder.Build();
@@ -34,9 +36,9 @@ app.UseRouting();
 
 app.UseCors("CORSPolicy");
 
-app.UseEndpoints(endpoints => {
-    endpoints.MapControllers();
-    endpoints.MapHub<MessageHub>("/offers");
-});
+//app.UseEndpoints(endpoints => {
+//});
+app.MapControllers();
+app.MapHub<PaintHub>("/paint");
 
 app.Run();

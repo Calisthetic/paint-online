@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using PaintOnlineAPI.Models;
+using System.Diagnostics;
 
 namespace PaintOnlineAPI.Hubs
 {
@@ -6,13 +8,11 @@ namespace PaintOnlineAPI.Hubs
     {
         Task SendOffersToUser(List<string> message);
     }
-    public class PaintHub : Hub<IPaintHubClient>
+    public class PaintHub : Hub
     {
-        public async Task SendOffersToUser(List<string> message)
+        public async Task SendDrawing(DrawingData drawingData)
         {
-            await Clients.All.SendOffersToUser(message);
-            //Groups
-            //Context.Abort();
+            await Clients.Others.SendAsync("ReceiveDrawing", drawingData);
         }
     }
 }
