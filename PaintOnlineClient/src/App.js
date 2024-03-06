@@ -10,11 +10,15 @@ function App() {
   const shadowCtxRef = useRef(null); 
   const [isDrawing, setIsDrawing] = useState(false); 
   const [lineWidth, setLineWidth] = useState(5); 
-  const [lineColor, setLineColor] = useState("black"); 
+  const lineColor = useRef("black") 
   const [lineOpacity, setLineOpacity] = useState(1);
   const [currentObject, setCurrentObject] = useState("line")
 
   const pointsRef = useRef([{x: 0, y: 0}])
+
+  const setLineColor = (color) => {
+    lineColor.current = color
+  }
 
   // Initialization when the component 
   // mounts for the first time 
@@ -24,7 +28,7 @@ function App() {
     ctx.lineCap = "round"; 
     ctx.lineJoin = "round"; 
     ctx.globalAlpha = lineOpacity; 
-    ctx.strokeStyle = lineColor; 
+    ctx.strokeStyle = lineColor.current; 
     ctx.lineWidth = lineWidth; 
     mainCtxRef.current = ctx; 
     const canvas1 = shadowCanvasRef.current; 
@@ -32,7 +36,7 @@ function App() {
     ctx1.lineCap = "round"; 
     ctx1.lineJoin = "round"; 
     ctx1.globalAlpha = lineOpacity; 
-    ctx1.strokeStyle = lineColor; 
+    ctx1.strokeStyle = lineColor.current; 
     ctx1.lineWidth = lineWidth; 
     shadowCtxRef.current = ctx1;
   }, [lineColor, lineOpacity, lineWidth]);
@@ -53,12 +57,14 @@ function App() {
 
   const startDrawing = (e) => {
     if (currentObject === "line") {
+      mainCtxRef.current.strokeStyle = lineColor.current; 
       mainCtxRef.current.beginPath(); 
       mainCtxRef.current.moveTo( 
         e.pageX, 
         e.pageY 
       );
     } else if (currentObject === "rectangle") {
+    } else if (currentObject === "ellipse") {
     }
     pointsRef.current[0].x = e.pageX
     pointsRef.current[0].y = e.pageY
@@ -70,7 +76,7 @@ function App() {
       mainCtxRef.current.closePath();
       SendDrawing({
         type: currentObject,
-        color: lineColor,
+        color: lineColor.current,
         opacity: lineOpacity,
         width: lineWidth,
         points: pointsRef.current
@@ -82,7 +88,22 @@ function App() {
         pointsRef.current[pointsRef.current.length - 1].y - pointsRef.current[0].y, mainCtxRef.current);
       SendDrawing({
         type: currentObject,
-        color: lineColor,
+        color: lineColor.current,
+        opacity: lineOpacity,
+        width: lineWidth,
+        points: [pointsRef.current[0], pointsRef.current[pointsRef.current.length - 1]]
+      })
+    } else if (currentObject === "ellipse") {
+      shadowCtxRef.current.clearRect(0, 0, shadowCanvasRef.current.width, shadowCanvasRef.current.height);
+      const { x, y } = pointsRef.current[pointsRef.current.length - 1];
+      const radiusX = Math.abs(x - pointsRef.current[0].x) / 2;
+      const radiusY = Math.abs(y - pointsRef.current[0].y) / 2;
+      drawEllipse(pointsRef.current[0].x + (x - pointsRef.current[0].x > 0 ? radiusX : -radiusX), 
+        pointsRef.current[0].y + (y - pointsRef.current[0].y > 0 ? radiusY : -radiusY), 
+        radiusX, radiusY, mainCtxRef.current);
+      SendDrawing({
+        type: currentObject,
+        color: lineColor.current,
         opacity: lineOpacity,
         width: lineWidth,
         points: [pointsRef.current[0], pointsRef.current[pointsRef.current.length - 1]]
@@ -108,16 +129,31 @@ function App() {
       drawRect(pointsRef.current[0].x, pointsRef.current[0].y,
         pointsRef.current[pointsRef.current.length - 1].x - pointsRef.current[0].x, 
         pointsRef.current[pointsRef.current.length - 1].y - pointsRef.current[0].y, shadowCtxRef.current);
+    } else if (currentObject === "ellipse") {
+      shadowCtxRef.current.clearRect(0, 0, shadowCanvasRef.current.width, shadowCanvasRef.current.height);
+      const { offsetX, offsetY } = e.nativeEvent;
+      const radiusX = Math.abs(offsetX - pointsRef.current[0].x) / 2;
+      const radiusY = Math.abs(offsetY - pointsRef.current[0].y) / 2;
+      drawEllipse(pointsRef.current[0].x + (offsetX - pointsRef.current[0].x > 0 ? radiusX : -radiusX), 
+        pointsRef.current[0].y + (offsetY - pointsRef.current[0].y > 0 ? radiusY : -radiusY), 
+        radiusX, radiusY, shadowCtxRef.current);
     }
   };
 
   const drawRect = useCallback((x, y, width, height, canvasContext, color) => {
     canvasContext.beginPath();
     canvasContext.rect(x, y, width, height);
-    canvasContext.fillStyle = color ?? lineColor;
+    canvasContext.fillStyle = color ?? lineColor.current;
     canvasContext.fill();
     canvasContext.closePath();
   }, [lineColor]);
+
+  const drawEllipse = useCallback((x, y, radiusX, radiusY, canvasContext, color) => {
+    canvasContext.beginPath();
+    canvasContext.ellipse(x, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
+    canvasContext.fillStyle = color ?? lineColor.current;
+    canvasContext.fill();
+  }, [lineColor])
 
 
 
@@ -153,15 +189,23 @@ function App() {
         ); 
         mainCtxRef.current.stroke(); 
       }
-      mainCtxRef.current.strokeStyle = lineColor
+      mainCtxRef.current.strokeStyle = lineColor.current
       mainCtxRef.current.closePath()
     } else if (drawingData.type === "rectangle") {
       drawRect(drawingData.points[0].x, drawingData.points[0].y,
         drawingData.points[drawingData.points.length-1].x - drawingData.points[0].x, 
         drawingData.points[drawingData.points.length-1].y - drawingData.points[0].y, 
         mainCtxRef.current, drawingData.color)
+    } else if (drawingData.type === "ellipse") {
+      const { x, y } = drawingData.points[drawingData.points.length - 1];
+      const radiusX = Math.abs(x - drawingData.points[0].x) / 2;
+      const radiusY = Math.abs(y - drawingData.points[0].y) / 2;
+      drawEllipse(drawingData.points[0].x + (x - drawingData.points[0].x > 0 ? radiusX : -radiusX), 
+        drawingData.points[0].y + (y - drawingData.points[0].y > 0 ? radiusY : -radiusY), 
+        radiusX, radiusY, mainCtxRef.current, drawingData.color);
+      mainCtxRef.current.fillStyle = lineColor.current
     }
-  }, [lineColor, drawRect])
+  }, [lineColor, drawRect, drawEllipse])
 
   useEffect(() => {
     connection.on("ReceiveDrawing", ReceiveDrawing);
@@ -197,7 +241,8 @@ function App() {
         height={window.innerHeight}
         width={window.innerWidth}
       />
-      <Sidebar setColor={setLineColor} setType={setCurrentObject}></Sidebar>
+      <Sidebar setColor={setLineColor} setType={setCurrentObject}
+      setLineWidth={setLineWidth} setOpacity={setLineOpacity}></Sidebar>
     </div> 
   );
 }

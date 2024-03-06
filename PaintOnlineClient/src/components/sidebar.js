@@ -9,6 +9,7 @@ export default function Sidebar(props) {
       <input type="color" onInput={(e) => {props.setColor(e.target.value)}}></input>
       <button onClick={() => {props.setType("line")}}>line</button>
       <button onClick={() => {props.setType("rectangle")}}>rectangle</button>
+      <button onClick={() => {props.setType("ellipse")}}>ellipse</button>
     </aside>
   )
 }
