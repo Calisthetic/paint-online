@@ -1,0 +1,27 @@
+.App {
+  padding: 0px;
+}
+aside {
+  box-shadow: 0px 0px 4px -2px rgba(0, 0, 0, 0.9);
+  width: fit-content;
+  padding: 4px;
+  display: flex;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn-open-sidebar {
+  border: none;
+  background-color: white;
+  cursor: pointer;
+}
+.btn-open-sidebar svg {
+  transition: fill 0.25s ease;
+}
+.btn-open-sidebar:hover svg {
+  fill: #444;
+  transition: fill 0.25s ease;
+}
