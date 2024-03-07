@@ -10,6 +10,7 @@ export default function Sidebar(props) {
       <button onClick={() => {props.setType("line")}}>line</button>
       <button onClick={() => {props.setType("rectangle")}}>rectangle</button>
       <button onClick={() => {props.setType("ellipse")}}>ellipse</button>
+      <button onClick={() => {props.setType("triangle")}}>triangle</button>
     </aside>
   )
 }

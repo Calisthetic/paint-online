@@ -65,6 +65,7 @@ function App() {
       );
     } else if (currentObject === "rectangle") {
     } else if (currentObject === "ellipse") {
+    } else if (currentObject === "triangle") {
     }
     pointsRef.current[0].x = e.pageX
     pointsRef.current[0].y = e.pageY
@@ -108,6 +109,17 @@ function App() {
         width: lineWidth,
         points: [pointsRef.current[0], pointsRef.current[pointsRef.current.length - 1]]
       })
+    } else if (currentObject === "triangle") {
+      shadowCtxRef.current.clearRect(0, 0, shadowCanvasRef.current.width, shadowCanvasRef.current.height);
+      drawTriangle(pointsRef.current[0].x, pointsRef.current[0].y, 
+        pointsRef.current[pointsRef.current.length-1].x, pointsRef.current[pointsRef.current.length-1].y, mainCtxRef.current);
+      SendDrawing({
+        type: currentObject,
+        color: lineColor.current,
+        opacity: lineOpacity,
+        width: lineWidth,
+        points: [pointsRef.current[0], pointsRef.current[pointsRef.current.length - 1]]
+      })
     }
     pointsRef.current = [{x:0,y:0}]
     setIsDrawing(false); 
@@ -137,6 +149,10 @@ function App() {
       drawEllipse(pointsRef.current[0].x + (offsetX - pointsRef.current[0].x > 0 ? radiusX : -radiusX), 
         pointsRef.current[0].y + (offsetY - pointsRef.current[0].y > 0 ? radiusY : -radiusY), 
         radiusX, radiusY, shadowCtxRef.current);
+    } else if (currentObject === "triangle") {
+      shadowCtxRef.current.clearRect(0, 0, shadowCanvasRef.current.width, shadowCanvasRef.current.height);
+      drawTriangle(pointsRef.current[0].x, pointsRef.current[0].y,
+        pointsRef.current[pointsRef.current.length-1].x, pointsRef.current[pointsRef.current.length-1].y, shadowCtxRef.current);
     }
   };
 
@@ -153,6 +169,17 @@ function App() {
     canvasContext.ellipse(x, y, radiusX, radiusY, 0, 0, 2 * Math.PI);
     canvasContext.fillStyle = color ?? lineColor.current;
     canvasContext.fill();
+  }, [lineColor])
+
+  const drawTriangle = useCallback((x1, y1, x2, y2, context, color) => {
+    context.strokeStyle = color ?? lineColor.current; 
+    context.beginPath(); 
+    context.moveTo(x1, y1);
+    context.lineTo(x2, y1);
+    context.lineTo((x2 + x1) / 2, y2);
+    context.lineTo(x1, y1);
+    context.stroke(); 
+    context.closePath();
   }, [lineColor])
 
 
@@ -204,8 +231,13 @@ function App() {
         drawingData.points[0].y + (y - drawingData.points[0].y > 0 ? radiusY : -radiusY), 
         radiusX, radiusY, mainCtxRef.current, drawingData.color);
       mainCtxRef.current.fillStyle = lineColor.current
+    } else if (drawingData.type === "triangle") {
+      drawTriangle(drawingData.points[0].x, drawingData.points[0].y,
+        drawingData.points[drawingData.points.length-1].x, 
+        drawingData.points[drawingData.points.length-1].y, 
+        shadowCtxRef.current, drawingData.color);
     }
-  }, [lineColor, drawRect, drawEllipse])
+  }, [lineColor, drawRect, drawEllipse, drawTriangle])
 
   useEffect(() => {
     connection.on("ReceiveDrawing", ReceiveDrawing);
